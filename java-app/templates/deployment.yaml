@@ -45,7 +45,7 @@ spec:
             - name: DOCKER_IMAGE_TAG
               value: "{{ .Values.image.tag }}"
         {{- if .Values.extraEnvs }}
-          {{- toYaml .Values.extraEnvs | indent 12 }}
+{{ toYaml .Values.extraEnvs | indent 12 }}
         {{- end }}
           ports:
             - name: http
@@ -53,11 +53,11 @@ spec:
               protocol: TCP
         {{- if .Values.readinessProbe }}
           readinessProbe:
-          {{- toYaml .Values.readinessProbe | indent 12 }}
+{{ toYaml .Values.readinessProbe | indent 12 }}
         {{- end }}
         {{- if .Values.livenessProbe }}
           livenessProbe:
-          {{- toYaml .Values.livenessProbe | indent 12 }}
+{{ toYaml .Values.livenessProbe | indent 12 }}
         {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

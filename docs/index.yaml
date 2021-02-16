@@ -3,12 +3,22 @@ entries:
   java-app:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2021-02-16T11:29:00.197426+02:00"
+    created: "2021-02-16T13:03:51.377998+02:00"
+    description: A Helm chart for Kubernetes
+    digest: 2857a584341bb67333fdec9861a8a211871b6a65d38a5b4d12a376d299330486
+    name: java-app
+    type: application
+    urls:
+    - https://mshenhera.github.io/helm-charts/java-app-0.1.1.tgz
+    version: 0.1.1
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2021-02-16T13:03:51.376951+02:00"
     description: A Helm chart for Kubernetes
     digest: 08e301fca16d974e443d913d0213e66408f25d603f699fd27aeef904f3be811a
     name: java-app
     type: application
     urls:
-    - https://mshenhera.github.com/helm-charts/java-app-0.1.0.tgz
+    - https://mshenhera.github.io/helm-charts/java-app-0.1.0.tgz
     version: 0.1.0
-generated: "2021-02-16T11:29:00.194208+02:00"
+generated: "2021-02-16T13:03:51.37538+02:00"
