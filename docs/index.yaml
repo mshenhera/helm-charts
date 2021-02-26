@@ -3,7 +3,7 @@ entries:
   java-app:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2021-02-16T13:03:51.377998+02:00"
+    created: "2021-02-26T17:53:12.405363+02:00"
     description: A Helm chart for Kubernetes
     digest: 2857a584341bb67333fdec9861a8a211871b6a65d38a5b4d12a376d299330486
     name: java-app
@@ -13,7 +13,7 @@ entries:
     version: 0.1.1
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2021-02-16T13:03:51.376951+02:00"
+    created: "2021-02-26T17:53:12.403131+02:00"
     description: A Helm chart for Kubernetes
     digest: 08e301fca16d974e443d913d0213e66408f25d603f699fd27aeef904f3be811a
     name: java-app
@@ -21,4 +21,15 @@ entries:
     urls:
     - https://mshenhera.github.io/helm-charts/java-app-0.1.0.tgz
     version: 0.1.0
-generated: "2021-02-16T13:03:51.37538+02:00"
+  tyk-gateway:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2021-02-26T17:53:12.40591+02:00"
+    description: A Helm chart for Kubernetes
+    digest: 8feea82a886cf9475d3d6ea559d3b1cc7c52d9e1f2baf3c018bba5efc8f3cc15
+    name: tyk-gateway
+    type: application
+    urls:
+    - https://mshenhera.github.io/helm-charts/tyk-gateway-0.1.0.tgz
+    version: 0.1.0
+generated: "2021-02-26T17:53:12.40058+02:00"
