@@ -1,61 +1,135 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: {{ .Values.gateway.kind }}
 metadata:
-  name: {{ include "tyk-gateway.fullname" . }}
+  name: gateway-{{ include "tyk-gateway.fullname" . }}
   labels:
-    {{- include "tyk-gateway.labels" . | nindent 4 }}
+    app: gateway-{{ include "tyk-gateway.fullname" . }}
+    chart: {{ include "tyk-gateway.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
 spec:
-  {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.replicaCount }}
-  {{- end }}
+{{- if eq .Values.gateway.kind "Deployment" }}
+  replicas: {{ .Values.gateway.replicaCount }}
+{{- end }}
+  minReadySeconds: 5
+{{- if eq .Values.gateway.kind "Deployment" }}
+  strategy:
+{{- else }}
+  updateStrategy:
+{{- end }}
+    # indicate which strategy we want for rolling update
+    type: RollingUpdate
+    rollingUpdate:
+{{- if eq .Values.gateway.kind "Deployment" }}
+      maxSurge: 2
+{{- end }}
+      maxUnavailable: 1
   selector:
     matchLabels:
-      {{- include "tyk-gateway.selectorLabels" . | nindent 6 }}
+      app: gateway-{{ include "tyk-gateway.fullname" . }}
+      release: {{ .Release.Name }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       labels:
-        {{- include "tyk-gateway.selectorLabels" . | nindent 8 }}
+        app: gateway-{{ include "tyk-gateway.fullname" . }}
+        release: {{ .Release.Name }}
     spec:
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      serviceAccountName: {{ include "tyk-gateway.serviceAccountName" . }}
-      securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      containers:
-        - name: {{ .Chart.Name }}
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          ports:
-            - name: http
-              containerPort: 80
-              protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /
-              port: http
-          readinessProbe:
-            httpGet:
-              path: /
-              port: http
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-      {{- with .Values.nodeSelector }}
+{{- if .Values.gateway.nodeSelector }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tolerations }}
+{{ toYaml .Values.gateway.nodeSelector | indent 8 }}
+{{- end }}
+{{- if .Values.gateway.tolerations }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+{{ toYaml .Values.gateway.tolerations | indent 8 }}
+{{- end }}
+{{- if .Values.gateway.affinity }}
+      affinity:
+{{ toYaml .Values.gateway.affinity | indent 8 }}
+{{- end }}
+      containers:
+      - name: gateway-{{ .Chart.Name }}
+        image: "{{ .Values.gateway.image.repository }}:{{ .Values.gateway.image.tag }}"
+        imagePullPolicy: {{ .Values.gateway.image.pullPolicy }}
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          privileged: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - all
+        env:
+          - name: TYK_GW_LISTENPORT
+            value: "{{ .Values.gateway.containerPort }}"
+          - name: REDIGOCLUSTER_SHARDCOUNT
+            value: "{{ .Values.redis.shardCount }}"
+          - name: TYK_GW_STORAGE_ADDRS
+            {{- if and .Values.redis.host .Values.redis.port }}
+            value: "{{ .Values.redis.host }}:{{ .Values.redis.port }}"
+            {{- else }}
+            value: "{{ join "," .Values.redis.addrs }}"
+            {{- end }}
+          - name: TYK_GW_STORAGE_ENABLECLUSTER
+            value: "{{ default "false" .Values.redis.enableCluster }}"
+          - name: TYK_GW_STORAGE_PASSWORD
+            value: "{{ .Values.redis.pass }}"
+          - name: TYK_GW_STORAGE_USESSL
+            value: "{{ .Values.redis.useSSL }}"
+          - name: TYK_GW_SECRET
+            value: "{{ .Values.secrets.APISecret }}"
+          - name: TYK_GW_NODESECRET
+            value: "{{ .Values.secrets.APISecret }}"
+          - name: TYK_GW_HTTPSERVEROPTIONS_USESSL
+            value: "{{ .Values.gateway.tls }}"
+        {{- if .Values.gateway.extraEnvs }}
+        {{- range $env := .Values.gateway.extraEnvs }}
+          - name: {{ $env.name }}
+            value: {{ $env.value | quote }}
+        {{- end }}
+        {{- end }}
+        command: ["/opt/tyk-gateway/tyk", "--conf=/etc/tyk-gateway/tyk.conf"]
+        workingDir: /opt/tyk-gateway
+        ports:
+        - containerPort: {{ .Values.gateway.containerPort }}
+        resources:
+{{ toYaml .Values.gateway.resources | indent 12 }}
+        volumeMounts:
+          - name: tyk-mgmt-gateway-conf
+            mountPath: /etc/tyk-gateway
+          - name: {{ .Release.Name }}-default-cert
+            mountPath: /etc/certs
+          - name: tyk-scratch
+            mountPath: /mnt/tyk-gateway
+        livenessProbe:
+          httpGet:
+            scheme: "HTTP{{ if .Values.gateway.tls }}S{{ end }}"
+            path: /hello
+            port: {{ .Values.gateway.containerPort }}
+          initialDelaySeconds: 5
+          periodSeconds: 2
+          timeoutSeconds: 3
+          failureThreshold: 2
+        readinessProbe:
+          httpGet:
+            scheme: "HTTP{{ if .Values.gateway.tls }}S{{ end }}"
+            path: /hello
+            port: {{ .Values.gateway.containerPort }}
+          initialDelaySeconds: 1
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+      securityContext:
+        runAsUser: 1000
+        fsGroup: 2000
+      volumes:
+        - name: tyk-scratch
+          emptyDir: {}
+        - name: tyk-mgmt-gateway-conf
+          configMap:
+            name: mgmt-gateway-conf-{{ include "tyk-gateway.fullname" . }}
+            items:
+              - key: tyk_mgmt.conf
+                path: tyk.conf
+        - name: {{ .Release.Name }}-default-cert
+          secret:
+            secretName: {{ .Release.Name }}-default-cert
