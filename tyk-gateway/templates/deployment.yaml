@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: {{ .Values.gateway.kind }}
 metadata:
-  name: gateway-{{ include "tyk-gateway.fullname" . }}
+  name: {{ include "tyk-gateway.fullname" . }}
   labels:
-    app: gateway-{{ include "tyk-gateway.fullname" . }}
+    app: {{ include "tyk-gateway.fullname" . }}
     chart: {{ include "tyk-gateway.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
