@@ -10,7 +10,10 @@ kind: Ingress
 metadata:
   name: {{ $fullName }}
   labels:
-    {{- include "tyk-gateway.labels" . | nindent 4 }}
+    app: gateway-{{ include "tyk-gateway.fullname" . }}
+    chart: {{ include "tyk-gateway.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
   {{- with .Values.ingress.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
