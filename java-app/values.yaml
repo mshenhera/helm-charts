@@ -109,6 +109,10 @@ readinessProbe:
     path: /actuator/health
     port: 8080
 
+secrets:
+  create: false
+  mount: false
+
 jmxJolokiaPrometheusExporter:
   enabled: false
   port: 9422
