@@ -69,6 +69,9 @@ spec:
             - name: secrets
               mountPath: /opt/secrets
             {{- end }}
+            {{- if .Values.appVolumes.volumeMounts }}
+{{ toYaml .Values.appVolumes.volumeMounts | indent 12 }}
+            {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
@@ -88,4 +91,7 @@ spec:
         - name: secrets
           secret:
             secretName: {{ include "java-app.fullname" . }}
+        {{- end }}
+        {{- if .Values.appVolumes.volumes }}
+{{ toYaml .Values.appVolumes.volumes | indent 8 }}
         {{- end }}
